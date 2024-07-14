@@ -9,12 +9,14 @@ from .serializers import TodoSerializer
 
 @api_view(["GET", "POST"])
 def todo_list(request):
+    print(f"api called, {request.method}")
     if request.method ==  "GET":
         todos = Todo.objects.all()
         serializer = TodoSerializer(todos, many=True)
         return Response(serializer.data)
     
     elif request.method == "POST":
+        print("post: add todo called")
         serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -35,6 +37,7 @@ def todo_detail(request, pk):
         serializer = TodoSerializer(todo, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            print(serializer.data)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
