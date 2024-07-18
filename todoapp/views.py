@@ -4,23 +4,22 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import Todo
 from .serializers import TodoSerializer
-
-# Create your views here.
+import logging
 
 @api_view(["GET", "POST"])
 def todo_list(request):
-    print(f"api called, {request.method}")
-    if request.method ==  "GET":
+    if request.method == "GET":
         todos = Todo.objects.all()
         serializer = TodoSerializer(todos, many=True)
         return Response(serializer.data)
     
     elif request.method == "POST":
-        print("post: add todo called")
         serializer = TodoSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            todo = serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print(serializer.errors)  # Debugging print
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -28,21 +27,22 @@ def todo_list(request):
 @api_view(["GET", "PATCH", "PUT", "DELETE"])
 def todo_detail(request, pk):
     todo = get_object_or_404(Todo, id=pk)
-    
+
     if request.method == 'GET':
         serializer = TodoSerializer(todo)
         return Response(serializer.data)
-    
+
     elif request.method == 'PATCH':
-        serializer = TodoSerializer(todo, data=request.data)
+        print(request.data)
+        serializer = TodoSerializer(todo, data=request.data, partial=True)
+        print(request.data)
         if serializer.is_valid():
-            serializer.save()
-            print(serializer.data)
+            todo = serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        else:
+            print(serializer.errors)  # Print errors for debugging
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     elif request.method == 'DELETE':
         todo.delete()
-        return Response(status = status.HTTP_204_NO_CONTENT)
-    
-    
+        return Response(status=status.HTTP_204_NO_CONTENT)
